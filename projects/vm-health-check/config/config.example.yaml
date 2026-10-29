@@ -1,0 +1,93 @@
+product: example-product
+
+thresholds:
+  vm_disk_usage_percent: 85
+  host_disk_usage_percent: 80
+  iostat_util_percent: 80
+  iostat_await_ms: 50
+
+report:
+  format: markdown
+  output_path: reports/latest.md
+
+vms:
+  - name: vm-01
+    host: 10.0.0.1
+    ssh_user: root
+    ssh_port: 22
+    pve_host: pve-node-01
+    checks:
+      ssh: true
+      df: true
+      iostat: true
+    disk_mappings:
+      - vm_mount: /
+        host_storage: local-lvm
+        host_disk: /dev/sdb
+        note: root filesystem mapping example
+      - vm_mount: /opt/local-path-provisioner
+        host_storage: local-lvm
+        host_disk: /dev/sdc
+        note: product data disk mapping example
+
+  - name: vm-02
+    host: 10.0.0.2
+    ssh_user: root
+    ssh_port: 22
+    pve_host: pve-node-01
+    checks:
+      ssh: true
+      df: true
+      iostat: true
+    disk_mappings:
+      - vm_mount: /
+        host_storage: local-lvm
+        host_disk: /dev/sdd
+      - vm_mount: /opt/local-path-provisioner
+        host_storage: local-lvm
+        host_disk: /dev/sde
+
+  - name: vm-03
+    host: 10.0.0.3
+    ssh_user: root
+    ssh_port: 22
+    pve_host: pve-node-02
+    checks:
+      ssh: true
+      df: true
+      iostat: true
+    disk_mappings:
+      - vm_mount: /
+        host_storage: local-lvm
+        host_disk: /dev/sdb
+      - vm_mount: /opt/local-path-provisioner
+        host_storage: local-lvm
+        host_disk: /dev/sdc
+
+pve_hosts:
+  - name: pve-node-01
+    access_mode: ssh
+    host: 10.0.1.1
+    ssh_user: root
+    ssh_port: 22
+    checks:
+      physical_disk_usage: true
+    disk_usage_command: df -lh
+
+  - name: pve-node-02
+    access_mode: pve_web
+    web_url: https://10.0.1.2:8006
+    checks:
+      physical_disk_usage: true
+    note: Web mode is recorded in v0.1. Automatic PVE API or browser-based collection is not implemented yet.
+
+collection:
+  ssh_connect_timeout_seconds: 10
+  command_timeout_seconds: 30
+  continue_on_error: true
+  readonly: true
+
+commands:
+  vm_disk_usage: df -lh
+  vm_iostat: iostat -dx 1 3
+  host_disk_usage: df -lh
